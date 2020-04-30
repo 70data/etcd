@@ -19,14 +19,14 @@ import (
 	"crypto/sha256"
 	"io"
 
-	"go.etcd.io/etcd/auth"
-	"go.etcd.io/etcd/etcdserver"
-	"go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
-	pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
-	"go.etcd.io/etcd/mvcc"
-	"go.etcd.io/etcd/mvcc/backend"
-	"go.etcd.io/etcd/raft"
-	"go.etcd.io/etcd/version"
+	"go.etcd.io/etcd/v3/auth"
+	"go.etcd.io/etcd/v3/etcdserver"
+	"go.etcd.io/etcd/v3/etcdserver/api/v3rpc/rpctypes"
+	pb "go.etcd.io/etcd/v3/etcdserver/etcdserverpb"
+	"go.etcd.io/etcd/v3/mvcc"
+	"go.etcd.io/etcd/v3/mvcc/backend"
+	"go.etcd.io/etcd/v3/raft"
+	"go.etcd.io/etcd/v3/version"
 
 	"go.uber.org/zap"
 )
@@ -44,6 +44,10 @@ type Alarmer interface {
 	// It returns a list of alarms present in the AlarmStore
 	Alarms() []*pb.AlarmMember
 	Alarm(ctx context.Context, ar *pb.AlarmRequest) (*pb.AlarmResponse, error)
+}
+
+type Downgrader interface {
+	Downgrade(ctx context.Context, dr *pb.DowngradeRequest) (*pb.DowngradeResponse, error)
 }
 
 type LeaderTransferrer interface {
@@ -68,10 +72,11 @@ type maintenanceServer struct {
 	lt  LeaderTransferrer
 	hdr header
 	cs  ClusterStatusGetter
+	d   Downgrader
 }
 
 func NewMaintenanceServer(s *etcdserver.EtcdServer) pb.MaintenanceServer {
-	srv := &maintenanceServer{lg: s.Cfg.Logger, rg: s, kg: s, bg: s, a: s, lt: s, hdr: newHeader(s), cs: s}
+	srv := &maintenanceServer{lg: s.Cfg.Logger, rg: s, kg: s, bg: s, a: s, lt: s, hdr: newHeader(s), cs: s, d: s}
 	if srv.lg == nil {
 		srv.lg = zap.NewNop()
 	}
@@ -201,6 +206,16 @@ func (ms *maintenanceServer) MoveLeader(ctx context.Context, tr *pb.MoveLeaderRe
 	return &pb.MoveLeaderResponse{}, nil
 }
 
+func (ms *maintenanceServer) Downgrade(ctx context.Context, r *pb.DowngradeRequest) (*pb.DowngradeResponse, error) {
+	resp, err := ms.d.Downgrade(ctx, r)
+	if err != nil {
+		return nil, togRPCError(err)
+	}
+	resp.Header = &pb.ResponseHeader{}
+	ms.hdr.fill(resp.Header)
+	return resp, nil
+}
+
 type authMaintenanceServer struct {
 	*maintenanceServer
 	ag AuthGetter
@@ -252,4 +267,8 @@ func (ams *authMaintenanceServer) Status(ctx context.Context, ar *pb.StatusReque
 
 func (ams *authMaintenanceServer) MoveLeader(ctx context.Context, tr *pb.MoveLeaderRequest) (*pb.MoveLeaderResponse, error) {
 	return ams.maintenanceServer.MoveLeader(ctx, tr)
+}
+
+func (ams *authMaintenanceServer) Downgrade(ctx context.Context, r *pb.DowngradeRequest) (*pb.DowngradeResponse, error) {
+	return ams.maintenanceServer.Downgrade(ctx, r)
 }

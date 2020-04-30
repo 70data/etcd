@@ -20,14 +20,14 @@ import (
 	"encoding/binary"
 	"time"
 
-	"go.etcd.io/etcd/auth"
-	"go.etcd.io/etcd/etcdserver/api/membership"
-	pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
-	"go.etcd.io/etcd/lease"
-	"go.etcd.io/etcd/lease/leasehttp"
-	"go.etcd.io/etcd/mvcc"
-	"go.etcd.io/etcd/pkg/traceutil"
-	"go.etcd.io/etcd/raft"
+	"go.etcd.io/etcd/v3/auth"
+	"go.etcd.io/etcd/v3/etcdserver/api/membership"
+	pb "go.etcd.io/etcd/v3/etcdserver/etcdserverpb"
+	"go.etcd.io/etcd/v3/lease"
+	"go.etcd.io/etcd/v3/lease/leasehttp"
+	"go.etcd.io/etcd/v3/mvcc"
+	"go.etcd.io/etcd/v3/pkg/traceutil"
+	"go.etcd.io/etcd/v3/raft"
 
 	"github.com/gogo/protobuf/proto"
 	"go.uber.org/zap"
@@ -146,8 +146,14 @@ func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) 
 
 func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if isTxnReadonly(r) {
+		trace := traceutil.New("transaction",
+			s.getLogger(),
+			traceutil.Field{Key: "read_only", Value: true},
+		)
+		ctx = context.WithValue(ctx, traceutil.TraceKey, trace)
 		if !isTxnSerializable(r) {
 			err := s.linearizableReadNotify(ctx)
+			trace.Step("agreement among raft nodes before linearized reading")
 			if err != nil {
 				return nil, err
 			}
@@ -160,15 +166,17 @@ func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse
 
 		defer func(start time.Time) {
 			warnOfExpensiveReadOnlyTxnRequest(s.getLogger(), start, r, resp, err)
+			trace.LogIfLong(traceThreshold)
 		}(time.Now())
 
-		get := func() { resp, err = s.applyV3Base.Txn(r) }
+		get := func() { resp, _, err = s.applyV3Base.Txn(ctx, r) }
 		if serr := s.doSerialize(ctx, chk, get); serr != nil {
 			return nil, serr
 		}
 		return resp, err
 	}
 
+	ctx = context.WithValue(ctx, traceutil.StartTimeKey, time.Now())
 	resp, err := s.raftRequest(ctx, pb.InternalRaftRequest{Txn: r})
 	if err != nil {
 		return nil, err
@@ -758,6 +766,10 @@ func (s *EtcdServer) linearizableReadLoop() {
 	}
 }
 
+func (s *EtcdServer) LinearizableReadNotify(ctx context.Context) error {
+	return s.linearizableReadNotify(ctx)
+}
+
 func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
 	s.readMu.RLock()
 	nc := s.readNotifier
@@ -790,5 +802,8 @@ func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error
 	}
 	authInfo = s.AuthStore().AuthInfoFromTLS(ctx)
 	return authInfo, nil
+}
 
+func (s *EtcdServer) Downgrade(ctx context.Context, r *pb.DowngradeRequest) (*pb.DowngradeResponse, error) {
+	return nil, nil
 }
