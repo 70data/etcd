@@ -126,6 +126,7 @@ type ServerConfig struct {
 
 	AuthToken  string
 	BcryptCost uint
+	TokenTTL   uint
 
 	// InitialCorruptCheck is true to check data corruption on boot
 	// before serving any peer/client traffic.
@@ -155,6 +156,10 @@ type ServerConfig struct {
 	LeaseCheckpointInterval time.Duration
 
 	EnableGRPCGateway bool
+
+	// UnsafeNoFsync disables all uses of fsync.
+	// Setting this is unsafe and will cause data loss.
+	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
 }
 
 // VerifyBootstrap sanity-checks the initial config for bootstrap case

@@ -9,13 +9,60 @@ The minimum recommended etcd versions to run in **production** are 3.2.28+, 3.3.
 <hr>
 
 
-## [v3.4.8](https://github.com/etcd-io/etcd/releases/tag/v3.4.8) (TBD)
+## [v3.4.10](https://github.com/etcd-io/etcd/releases/tag/v3.4.10) (TBD)
+
+See [code changes](https://github.com/etcd-io/etcd/compare/v3.4.9...v3.4.10) and [v3.4 upgrade guide](https://github.com/etcd-io/etcd/blob/master/Documentation/upgrades/upgrade_3_4.md) for any breaking changes.
+
+### Package `etcd server`
+
+- Add [`--unsafe-no-fsync`](https://github.com/etcd-io/etcd/pull/11946) flag.
+  - Setting the flag disables all uses of fsync, which is unsafe and will cause data loss. This flag makes it possible to run an etcd node for testing and development without placing lots of load on the file system.
+
+### Go
+
+- Compile with [*Go 1.12.17*](https://golang.org/doc/devel/release.html#go1.12).
+
+
+<hr>
+
+
+## [v3.4.9](https://github.com/etcd-io/etcd/releases/tag/v3.4.9) (2020-05-20)
+
+See [code changes](https://github.com/etcd-io/etcd/compare/v3.4.8...v3.4.9) and [v3.4 upgrade guide](https://github.com/etcd-io/etcd/blob/master/Documentation/upgrades/upgrade_3_4.md) for any breaking changes.
+
+### Package `wal`
+
+- Add [missing CRC checksum check in WAL validate method otherwise causes panic](https://github.com/etcd-io/etcd/pull/11924).
+  - See https://github.com/etcd-io/etcd/issues/11918.
+
+### Go
+
+- Compile with [*Go 1.12.17*](https://golang.org/doc/devel/release.html#go1.12).
+
+
+<hr>
+
+
+## [v3.4.8](https://github.com/etcd-io/etcd/releases/tag/v3.4.8) (2020-05-18)
 
 See [code changes](https://github.com/etcd-io/etcd/compare/v3.4.7...v3.4.8) and [v3.4 upgrade guide](https://github.com/etcd-io/etcd/blob/master/Documentation/upgrades/upgrade_3_4.md) for any breaking changes.
 
+### `etcdctl`
+
+- Make sure [save snapshot downloads checksum for integrity checks](https://github.com/etcd-io/etcd/pull/11896).
+
+### Package `clientv3`
+
+- Make sure [save snapshot downloads checksum for integrity checks](https://github.com/etcd-io/etcd/pull/11896).
+
 ### etcd server
 
+- Improve logging around snapshot send and receive.
 - [Add log when etcdserver failed to apply command](https://github.com/etcd-io/etcd/pull/11670).
+- [Fix deadlock bug in mvcc](https://github.com/etcd-io/etcd/pull/11817).
+- Fix [inconsistency between WAL and server snapshot](https://github.com/etcd-io/etcd/pull/11888).
+  - Previously, server restore fails if it had crashed after persisting raft hard state but before saving snapshot.
+  - See https://github.com/etcd-io/etcd/issues/10219 for more.
 
 ### Package Auth
 

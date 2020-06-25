@@ -10,6 +10,7 @@ require (
 	github.com/creack/pty v1.1.7
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4
+	github.com/etcd-io/gofail v0.0.0-20190801230047-ad7f989257ca
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903
@@ -37,7 +38,7 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8
 	github.com/urfave/cli v1.20.0
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2
-	go.etcd.io/bbolt v1.3.4
+	go.etcd.io/bbolt v1.3.5
 	go.uber.org/zap v1.14.1
 	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7

@@ -274,6 +274,9 @@ type Config struct {
 	AuthToken  string `json:"auth-token"`
 	BcryptCost uint   `json:"bcrypt-cost"`
 
+	//The AuthTokenTTL in seconds of the simple token
+	AuthTokenTTL uint `json:"auth-token-ttl"`
+
 	ExperimentalInitialCorruptCheck bool          `json:"experimental-initial-corrupt-check"`
 	ExperimentalCorruptCheckTime    time.Duration `json:"experimental-corrupt-check-time"`
 	ExperimentalEnableV2V3          string        `json:"experimental-enable-v2v3"`
@@ -321,6 +324,10 @@ type Config struct {
 
 	// EnableGRPCGateway is false to disable grpc gateway.
 	EnableGRPCGateway bool `json:"enable-grpc-gateway"`
+
+	// UnsafeNoFsync disables all uses of fsync.
+	// Setting this is unsafe and will cause data loss.
+	UnsafeNoFsync bool `json:"unsafe-no-fsync"`
 }
 
 // configYAML holds the config suitable for yaml parsing
@@ -392,8 +399,9 @@ func NewConfig() *Config {
 		CORS:          map[string]struct{}{"*": {}},
 		HostWhitelist: map[string]struct{}{"*": {}},
 
-		AuthToken:  "simple",
-		BcryptCost: uint(bcrypt.DefaultCost),
+		AuthToken:    "simple",
+		BcryptCost:   uint(bcrypt.DefaultCost),
+		AuthTokenTTL: 300,
 
 		PreVote: false, // TODO: enable by default in v3.5
 
