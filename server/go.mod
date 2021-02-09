@@ -5,8 +5,8 @@ go 1.15
 require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/go-systemd/v22 v22.1.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.3.5
@@ -32,6 +32,7 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.0-pre
 	go.etcd.io/etcd/pkg/v3 v3.5.0-pre
 	go.etcd.io/etcd/raft/v3 v3.5.0-pre
+	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
